@@ -14,6 +14,7 @@ The function :meth:'calc_eofs_from_olr_with_rotation' included in this file can 
 step that reduces noise in the original EOF calculation. 
 
 Postprocessing includes an alignment of EOF signs and a rotation algorithm that rotates the EOFs in three steps:
+
     1. Projects EOFs at DOY = n-1 onto EOF space for DOY = n. This is done to reduce spurious oscillations
     between EOFs on sequential days
     2. Rotate the projected EOFs by 1/366 (or 1/365) per day to ensure continuity across January to December
