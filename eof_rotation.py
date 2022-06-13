@@ -63,6 +63,17 @@ def angle_between_eofs(reference: eof.EOFData, target=eof.EOFData):
     return (angle1, angle2)
 
 
+def angle_btwn_vectors(vector1, vector2):
+    """
+    Calculates the angle between vectors, theta = arccos(t . r / (||r||*||t||))
+
+    Returns angle in radians
+    """
+
+    return np.arccos(np.clip(np.dot(vector1, vector2)
+                             /(np.linalg.norm(vector1)*np.linalg.norm(vector2)),-1.,1.))
+
+
 ################### EOF Calculation with rotation
 
 def calc_eofs_from_olr_with_rotation(olrdata: olr.OLRData, implementation: str = "internal", sign_doy1reference: bool = True,
