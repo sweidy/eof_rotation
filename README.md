@@ -20,8 +20,7 @@ Postprocessing includes an alignment of EOF signs and a rotation algorithm that 
     2. Rotate the projected EOFs by 1/366 (or 1/365) per day to ensure continuity across January to December
     3. Renormalize the EOFs to have a length of 1 (this is a small adjustment to account for small numerical
     errors).
-
-The parameter :param no_leap: is currently not implemented in the original mjoindices package, but this is in progress. It may be
-deleted for datasets that include leap years. 
+    
+Figures from the EOF rotation paper can be reproduced using the eof_rotation_example.ipynb file, along with the functions in rotation_plotting_tools.py. An example of how to implement the rotation algorithm using the above packages can be found in either eof_rotation_example.ipynb or eof_rotation_example.py. 
 
 Adaptation written by Sarah Weidman, 2022. Contact: sweidman@g.harvard.edu
