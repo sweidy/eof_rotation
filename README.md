@@ -9,6 +9,8 @@ The complete OMI algorithm is described in Kiladis, G.N., J. Dias, K.H. Straub, 
 Weickmann, and M.J. Ventrice, 2014: A Comparison of OLR and Circulation-Based Indices for Tracking the MJO.
 Mon. Wea. Rev., 142, 1697–1715, https://doi.org/10.1175/MWR-D-13-00301.1
 
+A description of the rotation algorithm can be found in the preprint of Sarah Weidman, Ned Kleiner, and Zhiming Kuang. Submitted. “A rotation procedure to improve seasonally varying Empirical Orthogonal Function bases for MJO indices.” Geophysical Research Letters, https://doi.org/10.1002/essoar.10511626.1
+
 The function :meth:'calc_eofs_from_olr_with_rotation' included in this file can be used instead of the function 
 :meth:'calc_eofs_from_olr' in the original mjoindices package. The new method includes a projection and rotation postprocessing
 step that reduces noise in the original EOF calculation. 
