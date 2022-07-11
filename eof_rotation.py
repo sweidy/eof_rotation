@@ -12,9 +12,6 @@ The function :meth:'calc_eofs_from_olr_with_rotation' included in this file can 
 :meth:'calc_eofs_from_olr' in the original mjoindices package. The new method includes a projection and rotation postprocessing
 step that reduces noise in the original EOF calculation. 
 
-The parameter :param no_leap: is currently not implemented in the original mjoindices package, but this is in progress. It may be
-deleted for datasets that include leap years. 
-
 Adaptation written by Sarah Weidman, 2022. Contact: sweidman@g.harvard.edu
 
 """
@@ -77,7 +74,7 @@ def angle_btwn_vectors(vector1, vector2):
 ################### EOF Calculation with rotation
 
 def calc_eofs_from_olr_with_rotation(olrdata: olr.OLRData, implementation: str = "internal", sign_doy1reference: bool = True,
-                            strict_leap_year_treatment: bool = False, no_leap: bool = False) -> eof.EOFDataForAllDOYs:
+                            strict_leap_year_treatment: bool = False) -> eof.EOFDataForAllDOYs:
     """
     Computes EOFs in a similar way to the function above, but rotates EOFs such that they are continuous and non-degenerate. 
     Rotation algorithm described in :meth:'post_process_rotation'
@@ -91,7 +88,6 @@ def calc_eofs_from_olr_with_rotation(olrdata: olr.OLRData, implementation: str =
     :param sign_doy1reference: See :meth:`correct_spontaneous_sign_changes_in_eof_series` in the mjoindices package.
     :param strict_leap_year_treatment: See description in :meth:`mjoindices.tools.find_doy_ranges_in_dates` 
     in the mjoindices package.
-    :param no_leap: If true, will act as if there are no leap years in the dataset (365 days consistently)
 
     :return:
     """
@@ -100,16 +96,16 @@ def calc_eofs_from_olr_with_rotation(olrdata: olr.OLRData, implementation: str =
     preprocessed_olr = omi.preprocess_olr(olrdata)
     # calculate EOFs from raw data
     raw_eofs = omi.calc_eofs_from_preprocessed_olr(preprocessed_olr, implementation=implementation, 
-                                                strict_leap_year_treatment=strict_leap_year_treatment, no_leap=no_leap) 
+                                                strict_leap_year_treatment=strict_leap_year_treatment) 
     # postprocess data
     result = post_process_rotation(raw_eofs, sign_doy1reference=sign_doy1reference, 
-                                    strict_leap_year_treatment=strict_leap_year_treatment, no_leap=no_leap)
+                                    strict_leap_year_treatment=strict_leap_year_treatment)
 
     return result
 
 
 def post_process_rotation(eofdata: eof.EOFDataForAllDOYs, sign_doy1reference: bool = True,
-                            strict_leap_year_treatment: bool = False, no_leap: bool = False) -> eof.EOFDataForAllDOYs:
+                            strict_leap_year_treatment: bool = False) -> eof.EOFDataForAllDOYs:
     """
     Post processes a series of EOF pairs for all DOYs.
 
@@ -129,33 +125,31 @@ def post_process_rotation(eofdata: eof.EOFDataForAllDOYs, sign_doy1reference: bo
     :param eofdata: The EOF series, which should be post processed.
     :param sign_doy1reference: See description of :meth:`correct_spontaneous_sign_changes_in_eof_series` 
     in the mjoindices package.
-    :param no_leap: if True, assumes all years have 365 days
 
     :return: the postprocessed series of EOFs
     """
-    pp_eofs = omi.correct_spontaneous_sign_changes_in_eof_series(eofdata, doy1reference=sign_doy1reference, no_leap=no_leap)
-    rot_eofs = rotate_eofs(pp_eofs, no_leap=no_leap)
-    norm_eofs = normalize_eofs(rot_eofs, no_leap=no_leap)
+    pp_eofs = omi.correct_spontaneous_sign_changes_in_eof_series(eofdata, doy1reference=sign_doy1reference)
+    rot_eofs = rotate_eofs(pp_eofs)
+    norm_eofs = normalize_eofs(rot_eofs)
     
     return norm_eofs
 
 
-def rotate_eofs(orig_eofs: eof.EOFDataForAllDOYs, no_leap: bool = False) -> eof.EOFDataForAllDOYs:
+def rotate_eofs(orig_eofs: eof.EOFDataForAllDOYs) -> eof.EOFDataForAllDOYs:
     """
     Rotate EOFs at each DOY to 1) align with the EOFs of the previous day and 2) be continuous across December to
     January boundary. Described more in detail in :meth:'post_process_rotation'
 
     :param orig_eofs: calculated EOFs, signs have been changed via spontaneous_sign_changes
-    :param no_leap: if True, assumes all years have 365 days
 
     :return: set of rotated EOFs
     """
 
-    delta = calculate_angle_from_discontinuity(orig_eofs, no_leap)
+    delta = calculate_angle_from_discontinuity(orig_eofs)
 
     print('Rotating by ', delta)
 
-    return rotate_each_eof_by_delta(orig_eofs, delta, no_leap)
+    return rotate_each_eof_by_delta(orig_eofs, delta)
 
 
 def rotation_matrix(delta):
@@ -165,20 +159,19 @@ def rotation_matrix(delta):
     return np.array([[np.cos(delta), -np.sin(delta)],[np.sin(delta), np.cos(delta)]])
 
 
-def calculate_angle_from_discontinuity(orig_eofs: eof.EOFDataForAllDOYs, no_leap: bool):
+def calculate_angle_from_discontinuity(orig_eofs: eof.EOFDataForAllDOYs):
     """
     Project the matrix to align with previous day's EOFs and calculate the resulting
     discontinuity between January 1 and December 31. Divide by number of days in year to 
     result in delta for rotation matrix. 
 
     :param orig_eofs: calculated EOFs, signs have been changed via spontaneous_sign_changes
-    :param no_leap: if True, assumes all years have 365 days
 
     :return: float of (negative) average angular discontinuity between EOF1 and EOF2 on the 
     first and last day of year, divided by the length of the year.
     """
 
-    list_of_doys = tools.doy_list(no_leap)
+    list_of_doys = tools.doy_list()
     doy1 = orig_eofs.eofdata_for_doy(1)
 
     ndoys = len(list_of_doys)
@@ -205,7 +198,7 @@ def calculate_angle_from_discontinuity(orig_eofs: eof.EOFDataForAllDOYs, no_leap
 
 
 def rotate_each_eof_by_delta(orig_eofs: eof.EOFDataForAllDOYs, 
-                                delta: float, no_leap: bool) -> eof.EOFDataForAllDOYs:
+                                delta: float) -> eof.EOFDataForAllDOYs:
     """
     Use delta calculated by optimization function to rotate original EOFs by delta.
     First projects EOFs from DOY n-1 onto EOF space for DOY n, then rotates projected
@@ -213,7 +206,6 @@ def rotate_each_eof_by_delta(orig_eofs: eof.EOFDataForAllDOYs,
 
     :param orig_eofs: calculated EOFs, signs have been changed via spontaneous_sign_changes
     :param delta: scalar by which to rotate EOFs calculated from discontinuity
-    :param no_leap: True if each year has 365 days, False if leap years included in dataset
 
     :returns: new EOFdata with rotated EOFs.  
     """
@@ -221,7 +213,7 @@ def rotate_each_eof_by_delta(orig_eofs: eof.EOFDataForAllDOYs,
     R = rotation_matrix(delta)
 
     doy1 = orig_eofs.eofdata_for_doy(1)
-    list_of_doys = tools.doy_list(no_leap)
+    list_of_doys = tools.doy_list()
     eofdata_rotated = []
     eofdata_rotated.append(doy1) # first doy is unchanged
 
@@ -245,17 +237,16 @@ def rotate_each_eof_by_delta(orig_eofs: eof.EOFDataForAllDOYs,
                                 eigenvalues=doyn.eigenvalues,
                                 no_observations=doyn.no_observations))
 
-    return eof.EOFDataForAllDOYs(eofdata_rotated, no_leap)
+    return eof.EOFDataForAllDOYs(eofdata_rotated)
 
 
-def normalize_eofs(orig_eofs: eof.EOFDataForAllDOYs, no_leap: bool) -> eof.EOFDataForAllDOYs:
+def normalize_eofs(orig_eofs: eof.EOFDataForAllDOYs) -> eof.EOFDataForAllDOYs:
     """
     :param eofdata: The rotated EOF series
-    :param no_leap: if True, assumes all years have 365 days
 
     :return: normalize the EOFs to have length 1
     """
-    list_of_doys = tools.doy_list(no_leap)
+    list_of_doys = tools.doy_list()
 
     eofdata_normalized = []
 
@@ -273,4 +264,4 @@ def normalize_eofs(orig_eofs: eof.EOFDataForAllDOYs, no_leap: bool) -> eof.EOFDa
                                             eigenvalues=doyn.eigenvalues,
                                             no_observations=doyn.no_observations)) 
 
-    return eof.EOFDataForAllDOYs(eofdata_normalized, no_leap) 
+    return eof.EOFDataForAllDOYs(eofdata_normalized) 
