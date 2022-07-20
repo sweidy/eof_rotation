@@ -11,6 +11,13 @@ Mon. Wea. Rev., 142, 1697–1715, https://doi.org/10.1175/MWR-D-13-00301.1
 
 A description of the rotation algorithm can be found in the preprint of Sarah Weidman, Ned Kleiner, and Zhiming Kuang. Submitted. “A rotation procedure to improve seasonally varying Empirical Orthogonal Function bases for MJO indices.” Geophysical Research Letters, https://doi.org/10.1002/essoar.10511626.1
 
+A FAIR compliant repository of this code can be found on Zenodo at https://zenodo.org/badge/latestdoi/501731806
+
+
+[![DOI](https://zenodo.org/badge/501731806.svg)](https://zenodo.org/badge/latestdoi/501731806)
+
+
+
 The function :meth:'calc_eofs_from_olr_with_rotation' included in this file can be used instead of the function 
 :meth:'calc_eofs_from_olr' in the original mjoindices package. The new method includes a projection and rotation postprocessing
 step that reduces noise in the original EOF calculation. 
